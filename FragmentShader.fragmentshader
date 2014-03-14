@@ -1,0 +1,37 @@
+#version 330
+
+// Input:
+// Texture coordinates
+in vec2 currTextureCoords;
+in vec3 vertexPosition;
+in vec3 vertexNormal;
+in vec3 objColor;
+
+// Texture "sampler" object
+uniform sampler2D myTextureSampler;
+
+// Output: Color
+out vec3 color;
+
+void main()
+{
+    //color = vec3(1,1,1);
+
+    vec3 lightCoefficients = vec3(.2,.7,.1);
+    vec3 light_direction = vec3(1,1,1);
+    vec3 cameraPos = vec3(0,0,0);
+    float shininessCoefficient = .2;
+   // vec3 objColor = vec3(1,1,1);
+    vec3 lightColor = vec3(1,1,1);
+
+    vec3 rV = normalize(-1 * (-1*light_direction.xyz) - (2 * dot(-1*light_direction,normalize(vertexNormal)) * normalize(vertexNormal).xyz));
+    vec3 vV = (normalize(-cameraPos + vertexPosition)).xyz;
+
+    float specialShininess = max(0,pow(dot(rV,vV),shininessCoefficient));
+
+    color = vec3(   lightCoefficients.x * objColor.x + lightColor.x * max(0, lightCoefficients.y * dot(vec3(vertexNormal.x,vertexNormal.y,vertexNormal.z), light_direction)) + lightCoefficients.z * specialShininess * lightColor.x,
+                    lightCoefficients.x * objColor.y + lightColor.y * max(0, lightCoefficients.y * dot(vec3(vertexNormal.x,vertexNormal.y,vertexNormal.z), light_direction)) + lightCoefficients.z * specialShininess * lightColor.y,
+                    lightCoefficients.x * objColor.z + lightColor.z * max(0, lightCoefficients.y * dot(vec3(vertexNormal.x,vertexNormal.y,vertexNormal.z), light_direction)) + lightCoefficients.z * specialShininess * lightColor.z);
+
+   // color = vec3(1,1,1);
+}

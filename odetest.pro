@@ -34,9 +34,9 @@ SOURCES += main.cpp\
     levelmanager.cpp \
     collisionCallback.cpp \
     groundtexture.cpp \
-    cubebasepiece.cpp \
-    wheelpiece.cpp \
-    selector.cpp
+    selector.cpp \
+    MachinePieces/wheelpiece.cpp \
+    MachinePieces/cubebasepiece.cpp
 
 HEADERS  += mainwindow.h \
     glheader.h \
@@ -46,10 +46,11 @@ HEADERS  += mainwindow.h \
     levelmanager.h \
     collisionCallback.h \
     groundtexture.h \
-    machinepiece.h \
-    cubebasepiece.h \
-    wheelpiece.h \
-    selector.h
+    selector.h \
+    MachinePieces/machinepiece.h \
+    MachinePieces/cubebasepiece.h \
+    MachinePieces/wheelpiece.h \
+    MachinePieces/piecetypes.h
 
 INCLUDEPATH += /Users/kinggryan/ode-0.13/include
 

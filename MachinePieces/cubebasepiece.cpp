@@ -200,7 +200,7 @@ void CubeBasePiece::attachToBase(dBodyID otherBody, dWorldID world, dJointGroupI
     dJointSetSliderParam(connectingJoint,dParamHiStop,0);
 }
 
-int CubeBasePiece::selectFace(int& numFaces, dSpaceID space, dGeomID ray, int cameraX, int cameraY, int cameraZ)
+int CubeBasePiece::selectFace(int& numFaces, dSpaceID space, dGeomID ray, float cameraX, float cameraY, float cameraZ)
 {
     numFaces = 6;
 
@@ -212,16 +212,16 @@ int CubeBasePiece::selectFace(int& numFaces, dSpaceID space, dGeomID ray, int ca
     // create six faces
     faces[0] = dCreateBox(space,.01,sides[1],sides[2]);
     faces[1] = dCreateBox(space,.01,sides[1],sides[2]);
-    dGeomSetPosition(faces[0],currentPosition[0]-sides[0],currentPosition[1],currentPosition[2]);
-    dGeomSetPosition(faces[1],currentPosition[0]+sides[0],currentPosition[1],currentPosition[2]);
+    dGeomSetPosition(faces[0],currentPosition[0]-(sides[0]/2),currentPosition[1],currentPosition[2]);
+    dGeomSetPosition(faces[1],currentPosition[0]+(sides[0]/2),currentPosition[1],currentPosition[2]);
     faces[2] = dCreateBox(space,sides[0],.01,sides[2]);
     faces[3] = dCreateBox(space,sides[0],.01,sides[2]);
-    dGeomSetPosition(faces[2],currentPosition[0],currentPosition[1]-sides[1],currentPosition[2]);
-    dGeomSetPosition(faces[3],currentPosition[0],currentPosition[1]+sides[1],currentPosition[2]);
+    dGeomSetPosition(faces[2],currentPosition[0],currentPosition[1]+(sides[1]/2),currentPosition[2]);
+    dGeomSetPosition(faces[3],currentPosition[0],currentPosition[1]-(sides[1]/2),currentPosition[2]);
     faces[4] = dCreateBox(space,sides[0],sides[1],.01);
     faces[5] = dCreateBox(space,sides[0],sides[1],.01);
-    dGeomSetPosition(faces[4],currentPosition[0],currentPosition[1],currentPosition[2]-sides[2]);
-    dGeomSetPosition(faces[5],currentPosition[0],currentPosition[1],currentPosition[2]+sides[2]);
+    dGeomSetPosition(faces[4],currentPosition[0],currentPosition[1],currentPosition[2]+(sides[2]/2));
+    dGeomSetPosition(faces[5],currentPosition[0],currentPosition[1],currentPosition[2]-(sides[2]/2));
 
     int selectedFace;
     int selectedPointDistance = 1000;
@@ -231,12 +231,12 @@ int CubeBasePiece::selectFace(int& numFaces, dSpaceID space, dGeomID ray, int ca
     // find collision point closest to camera
     for(int i = 0 ; i < 6 ; i++)
     {
-        // just do this at the start of the loop
+        // rotate geom before collision
         dGeomSetRotation(faces[i],rotationMatrix);
 
         if(dCollide(faces[i],ray,1,&contact[0],sizeof(dContact)) != 0)
         {
-            int tempDistance = pow(contact[0].pos[0] - cameraX,2) + pow(contact[0].pos[1] - cameraY,2) + pow(contact[0].pos[2] - cameraZ,2);
+            float tempDistance = pow(contact[0].pos[0] - cameraX,2) + pow(contact[0].pos[1] - cameraY,2) + pow(contact[0].pos[2] - cameraZ,2);
             if(tempDistance <= selectedPointDistance)
             {
                 selectedPointDistance = tempDistance;

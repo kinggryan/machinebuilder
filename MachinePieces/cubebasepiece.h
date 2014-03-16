@@ -17,9 +17,10 @@ public:
     void attachToBase(dBodyID otherBody, dWorldID world, dJointGroupID jointGroup, dReal x, dReal y, dReal z, const dMatrix3 rotationMatrix);
     float getAttachmentOffset() {return .5;}
     void activate() {}
+    void changeActivationDirection() {}
 
     //SElector Related Functions
-    int selectFace(int& numFaces, dSpaceID space, dGeomID ray, int cameraX, int cameraY, int cameraZ);
+    int selectFace(int& numFaces, dSpaceID space, dGeomID ray, float cameraX, float cameraY, float cameraZ);
 
 
     static const dReal sides[3];

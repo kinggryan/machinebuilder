@@ -18,13 +18,22 @@ public:
     virtual void attachToBase(dBodyID body, dWorldID world, dJointGroupID jointGroup, dReal x, dReal y, dReal z, const dMatrix3 rotationMatrix) = 0;
     virtual float getAttachmentOffset() = 0;
     virtual void activate() = 0;
+    virtual void changeActivationDirection() = 0;
+    void setColor(float r, float g, float b)
+        {
+            color[0] = r;
+            color[1] = g;
+            color[2] = b;
+        }
 
     // Selector related functions
-    virtual int selectFace(int& numFaces, dSpaceID space, dGeomID ray, int cameraX, int cameraY, int cameraZ) = 0;
+    virtual int selectFace(int& numFaces, dSpaceID space, dGeomID ray, float cameraX, float cameraY, float cameraZ) = 0;
 
+    // public data
     dBodyID body;
     dGeomID geom;
     GLfloat color[3];
+    int activationDirection;
 };
 
 #endif // MACHINEPIECE_H

@@ -2,7 +2,7 @@
 #define SELECTOR_H
 #define dDOUBLE
 #include <ode/ode.h>
-#include "MachinePiece.h"
+#include "MachinePieces/machinepiece.h"
 
 class Selector
 {
@@ -12,7 +12,7 @@ public:
 
     void clickBody(MachinePiece* clickedBody, float depth);
     MachinePiece* getSelectedPiece();
-    int getSelectedPieceFace(int cameraX, int cameraY, int cameraZ);
+    int getSelectedPieceFace();
 
 protected:
     float nearestObjectDistance;

@@ -10,9 +10,15 @@
 #include "box.h"
 #include <QTimer>
 #include "groundtexture.h"
-#include "machinepiece.h"
-#include "cubebasepiece.h"
+#include "MachinePieces/machinepiece.h"
+#include "MachinePieces/cubebasepiece.h"
 #include <vector>
+#include "MachinePieces/piecetypes.h"
+
+enum actionMode {modeCamera,
+                 modeAddPiece,
+                 modeActivatePiece,
+                 modeChangeActivationDirection};
 
 class gldisplay : public QGLWidget
 {
@@ -24,6 +30,9 @@ public:
     void keyPressEvent(QKeyEvent* key);
     void mousePressEvent(QMouseEvent* event);
     void mouseMoveEvent(QMouseEvent *event);
+
+    // called from GUI
+    void setAddPieceMode(pieceType piece);
 
 protected:
     void initializeGL();
@@ -56,14 +65,23 @@ protected:
    // CubeBasePiece* bbox;
    // MachinePiece* cbox;
     MachinePiece** pieces;
+//    std::vector<MachinePiece*> pieces;
     groundtexture* groundtex;
 
     QTimer* timer;
 
-    int actionMode;
+    actionMode currentActionMode;
+
+private:
+    void addPiece(MachinePiece* pieceToAdd);
+    int numberOfPieces;
+    pieceType pieceTypeToAdd;
 
 public slots:
     void updateTime();
+    void activateGravity();
+    void activatePieceMode();
+    void changeActivationDirectionMode();
 };
 
 #endif // GLDISPLAY_H

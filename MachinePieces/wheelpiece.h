@@ -15,9 +15,10 @@ public:
     void attachToBase(dBodyID otherBody, dWorldID world, dJointGroupID jointGroup, dReal x, dReal y, dReal z, const dMatrix3 rotationMatrix);
     float getAttachmentOffset();
     void activate();
+    void changeActivationDirection();
 
     // Selector Related Functions
-    int selectFace(int& numFaces, dSpaceID space, dGeomID ray, int cameraX, int cameraY, int cameraZ);
+    int selectFace(int& numFaces, dSpaceID space, dGeomID ray, float cameraX, float cameraY, float cameraZ);
 
     float radius;
     float thickness;

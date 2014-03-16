@@ -10,13 +10,12 @@
 #include <QKeyEvent>
 #include <cmath>
 #include "groundtexture.h"
-#include "machinepiece.h"
-#include "cubebasepiece.h"
-#include "wheelpiece.h"
+#include "MachinePieces/machinepiece.h"
+#include "MachinePieces/cubebasepiece.h"
+#include "MachinePieces/wheelpiece.h"
 
 #define STEP_SIZE .01
 #define MOUSE_PIXEL_RADIAN_RATIO .005
-#define NUM_PIECES 1
 
 static const GLfloat g_vertex_buffer_data[16] = {    -1.0f, -1.0f, -1.5f, 1.0f,
                                                +1.0f, -1.0f, -1.5f, 1.0f,
@@ -58,11 +57,15 @@ gldisplay::gldisplay(QWidget *parent) : QGLWidget(new Core3_2_context(QGLFormat:
     dWorldSetERP(world,.2);
     dWorldSetCFM(world,0);
 
+    numberOfPieces = 0;
+
     dJointGroupID machineJointGroup = dJointGroupCreate(0);
 
-    pieces = new MachinePiece*[NUM_PIECES];
+    // Make pieces null
+    pieces = NULL;
 
-    pieces[0] = new CubeBasePiece(world,space,0,.45,-2.25);
+    addPiece(new CubeBasePiece(world,space,0,.45,-2.25));
+ //   pieces[0] = (new CubeBasePiece(world,space,0,.45,-2.25));
   /*  pieces[1] = new WheelPiece(world,space,.65,1.25,-2.5);
     pieces[2] = new WheelPiece(world,space,.65,1.25,-2.5);
     pieces[3] = new CubeBasePiece(world,space,0,0,0);
@@ -82,7 +85,7 @@ gldisplay::gldisplay(QWidget *parent) : QGLWidget(new Core3_2_context(QGLFormat:
    // groundtex = new groundtexture();
 
     ground = dCreatePlane(space, 0, 1, 0, 0);
-    dWorldSetGravity(world, 0, -.45, 0);
+ //   dWorldSetGravity(world, 0, -.45, 0);
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateTime()));
@@ -92,12 +95,12 @@ gldisplay::gldisplay(QWidget *parent) : QGLWidget(new Core3_2_context(QGLFormat:
     setFocusPolicy(Qt::StrongFocus);
 
     // set look-around mode
-    actionMode = 1;
+    currentActionMode = modeCamera;
 }
 
 gldisplay::~gldisplay()
 {
-    for (int i = 0 ; i < NUM_PIECES ; i++)
+    for (int i = 0 ; i < numberOfPieces ; i++)
         delete pieces[i];
     delete pieces;
 //    delete groundtex;
@@ -136,7 +139,7 @@ void gldisplay::paintGL()
 
     glUseProgram(shaderID);
 
-    for(int i = 0 ; i < NUM_PIECES ; i++)
+    for(int i = 0 ; i < numberOfPieces ; i++)
         pieces[i]->draw(bufferID,shaderID,cameraPosX,cameraPosY,cameraPosZ, cameraAzimuth, cameraThetaAltitude);
 
     // draw boxes
@@ -183,30 +186,85 @@ void gldisplay::keyPressEvent(QKeyEvent* key)
         cameraPosZ += .1 * cos(cameraThetaAltitude) * cos(cameraAzimuth-(M_PI/2));
         cameraPosX += .1 * cos(cameraThetaAltitude) * sin(cameraAzimuth-(M_PI/2));
         break;
-    case Qt::Key_J:
-        actionMode = actionMode ^ 1; break; // flip action mode
+    case Qt::Key_Q:
+        cameraPosY -= .1;
+        break;
+    case Qt::Key_E:
+        cameraPosY += .1;
+        break;
+  //  case Qt::Key_J:
+    //    currentActionMode = currentActionMode ^ 1; break; // flip action mode
     }
 }
 
 void gldisplay::mousePressEvent(QMouseEvent *event)
 {
-    if(actionMode == 0)
+    if(currentActionMode == modeCamera)
     {
         // store clicks
         mouseClickX = event->x();
         mouseClickY = event->y();
     }
-    else if(actionMode == 1)
+    else if(currentActionMode == modeAddPiece)
     {
-        Selector* sel = new Selector(cameraPosX,cameraPosY,cameraPosZ,cameraAzimuth,cameraThetaAltitude,event->x(),event->y(),cameraFOVy,500,0,world,space);
-        sel->getSelectedPieceFace(cameraPosX,cameraPosY,cameraPosZ);
+        // select piece and face
+        Selector* sel = new Selector(cameraPosX,cameraPosY,-cameraPosZ,cameraAzimuth,cameraThetaAltitude,event->x(),event->y(),cameraFOVy,500,0,world,space);
+        int tempFace = sel->getSelectedPieceFace();
+
+        if(tempFace == -1) // if invalid
+        {
+            currentActionMode = modeCamera;
+            delete sel;
+        }
+        else
+        {
+            // add a new piece
+            switch(pieceTypeToAdd)
+            {
+            case wheelPiece:
+                addPiece(new WheelPiece(world,space,0,0,0)); break;
+            }
+
+            // and connect it
+            dJointGroupID machineJointGroup = dJointGroupCreate(0);
+            dynamic_cast<CubeBasePiece*>(sel->getSelectedPiece())->attachPieceAtPosition(pieces[numberOfPieces-1],tempFace,world,machineJointGroup);
+            delete sel;
+
+            // return to look mode
+            currentActionMode = modeCamera;
+        }
+    }
+    else if(currentActionMode == modeActivatePiece)
+    {
+        Selector* sel = new Selector(cameraPosX,cameraPosY,-cameraPosZ,cameraAzimuth,cameraThetaAltitude,event->x(),event->y(),cameraFOVy,500,0,world,space);
+        MachinePiece* selectedPiece = sel->getSelectedPiece();
+
+        if(selectedPiece != NULL)
+        {
+            selectedPiece->activate();
+        }
+
         delete sel;
+        currentActionMode = modeCamera;
+    }
+    else if(currentActionMode == modeChangeActivationDirection)
+    {
+        Selector* sel = new Selector(cameraPosX,cameraPosY,-cameraPosZ,cameraAzimuth,cameraThetaAltitude,event->x(),event->y(),cameraFOVy,500,0,world,space);
+        MachinePiece* selectedPiece = sel->getSelectedPiece();
+
+        if(selectedPiece != NULL)
+        {
+            selectedPiece->changeActivationDirection();
+        }
+
+        delete sel;
+        currentActionMode = modeCamera;
     }
 }
 
 void gldisplay::mouseMoveEvent(QMouseEvent *event)
 {
-    if(actionMode == 0)
+    if(currentActionMode == modeCamera)
     {
         // Turn viewpoint if mouse is being held down on screen
         cameraAzimuth += MOUSE_PIXEL_RADIAN_RATIO * (event->x() - mouseClickX);
@@ -214,4 +272,51 @@ void gldisplay::mouseMoveEvent(QMouseEvent *event)
         mouseClickX = event->x();
         mouseClickY = event->y();
     }
+}
+
+
+void gldisplay::addPiece(MachinePiece* pieceToAdd)
+{
+    // resize piece array
+    if(pieces != NULL)
+    {
+        MachinePiece* tempPieceArray[numberOfPieces+1];
+
+        for(int i = 0 ; i < numberOfPieces ; i++)
+            tempPieceArray[i] = pieces[i];
+
+        delete pieces;
+
+        pieces = new MachinePiece*[++numberOfPieces];
+        for(int i = 0 ; i < numberOfPieces-1 ; i++)
+            pieces[i] = tempPieceArray[i];
+
+        pieces[numberOfPieces-1] = pieceToAdd;
+    }
+    else
+    {
+        pieces = new MachinePiece*[++numberOfPieces];
+        pieces[0] = pieceToAdd;
+    }
+}
+
+void gldisplay::setAddPieceMode(pieceType piece)
+{
+    currentActionMode = modeAddPiece;
+    pieceTypeToAdd = piece;
+}
+
+void gldisplay::activateGravity()
+{
+    dWorldSetGravity(world, 0, -.45, 0);
+}
+
+void gldisplay::activatePieceMode()
+{
+    currentActionMode = modeActivatePiece;
+}
+
+void gldisplay::changeActivationDirectionMode()
+{
+    currentActionMode = modeChangeActivationDirection;
 }

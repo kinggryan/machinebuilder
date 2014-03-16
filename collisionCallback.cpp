@@ -4,8 +4,8 @@
 #define dDOUBLE
 #include <ode/ode.h>
 #include "selector.h"
-#include "machinepiece.h"
-#include "wheelpiece.h"
+#include "MachinePieces/machinepiece.h"
+#include "MachinePieces/wheelpiece.h"
 
 static dWorldID gWorld;
 static dJointGroupID gContactGroup;

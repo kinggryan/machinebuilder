@@ -42,13 +42,15 @@ MachinePiece* Selector::getSelectedPiece()
     return selectedPiece;
 }
 
-int Selector::getSelectedPieceFace(int cameraX, int cameraY, int cameraZ)
+int Selector::getSelectedPieceFace()
 {
     if(selectedPiece == NULL)
         return -1;
 
     int numFaces;
+    const dReal* pos = dGeomGetPosition(geom);
 
-    selectedPiece->selectFace(numFaces,raySpace,geom,cameraX,cameraY,cameraZ);
+    return(selectedPiece->selectFace(numFaces,raySpace,geom,pos[0],pos[1],pos[2]));
+
     // call function in selected piece and return geom array
 }

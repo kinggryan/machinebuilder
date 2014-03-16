@@ -10,8 +10,9 @@ WheelPiece::WheelPiece(dWorldID& world,dSpaceID& space, float x, float y, float 
     dBodyCreate(world);
     body = dBodyCreate(world);
 
-    radius = .45;
+    radius = .35;
     thickness = .25;
+    activationDirection = 0;
 
     geom = dCreateCylinder(space, radius, thickness);
     dGeomSetBody(geom, body);
@@ -162,27 +163,19 @@ void WheelPiece::draw(unsigned int *buffer, unsigned int shader, float cameraX, 
 
 void WheelPiece::attachToBase(dBodyID otherBody, dWorldID world, dJointGroupID jointGroup, dReal x, dReal y, dReal z, const dMatrix3 rotationMatrix)
 {
+    // set this piece position and rotation
     dBodySetPosition(body, x, y, z);
     dBodySetRotation(body, rotationMatrix);
 
-/*    dJointID connectingJoint = dJointCreateBall(world,jointGroup);
-    dJointAttach(connectingJoint,otherBody,body);
-    dJointSetBallAnchor(connectingJoint,otherBodyPosition[0], otherBodyPosition[1], otherBodyPosition[2]+.15);
-    dJointID axisRestriction = dJointCreateAMotor(world,jointGroup);
-    dJointAttach(axisRestriction,otherBody,body);
-    dJointSetAMotorNumAxes(axisRestriction,2);
-    dJointSetAMotorAxis(axisRestriction,0,1,1,0,0);
-    dJointSetAMotorAxis(axisRestriction,0,1,0,1,0);
-
-    dJointSetAMotorParam(axisRestriction,dParamVel,.1);
-    dJointSetAMotorParam(axisRestriction,dParamFMax,.5); */
-
+    // create and connect
     connectingJoint = dJointCreateHinge2(world,0);
     dJointAttach (connectingJoint,otherBody,body);
+
+    // set anchor, axes, and lo and hi stops
     const dReal *a = dBodyGetPosition (body);
-    dJointSetHinge2Anchor (connectingJoint,a[0],a[1],a[2]);
-    dJointSetHinge2Axis1 (connectingJoint,1,0,0);
-    dJointSetHinge2Axis2 (connectingJoint,0,0,1);
+    dJointSetHinge2Anchor (connectingJoint,a[0],a[1],a[2]);   
+    dJointSetHinge2Axis1 (connectingJoint,rotationMatrix[1],rotationMatrix[5],rotationMatrix[9]);
+    dJointSetHinge2Axis2 (connectingJoint,rotationMatrix[2],rotationMatrix[6],rotationMatrix[10]);
     dJointSetHinge2Param (connectingJoint,dParamLoStop,0);
     dJointSetHinge2Param (connectingJoint,dParamHiStop,0);
 }
@@ -194,11 +187,30 @@ float WheelPiece::getAttachmentOffset()
 
 void WheelPiece::activate()
 {
+    switch(activationDirection)
+    {
+    case 0:
+        dJointSetHinge2Param (connectingJoint,dParamVel2,-2); break;
+    case 1:
+        dJointSetHinge2Param (connectingJoint,dParamVel2,2); break;
+    }
+
     dJointSetHinge2Param (connectingJoint,dParamVel2,-2);
     dJointSetHinge2Param (connectingJoint,dParamFMax2,0.7);
 }
 
-int WheelPiece::selectFace(int& numFaces, dSpaceID space, dGeomID ray, int cameraX, int cameraY, int cameraZ)
+int WheelPiece::selectFace(int& numFaces, dSpaceID space, dGeomID ray, float cameraX, float cameraY, float cameraZ)
 {
+    // TODO allow select face for wheels. For now, always return negative
+    return -1;
+}
 
+void WheelPiece::changeActivationDirection()
+{
+    // increment activation direction and mod it by number of directions
+    ++activationDirection %= 2;
+
+    float tempColor = color[0];
+    color[0] = color[1];
+    color[1] = tempColor;
 }
